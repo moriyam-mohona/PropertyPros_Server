@@ -63,7 +63,6 @@ const usersCollection = db.collection("Users");
 const wishlistCollection = db.collection("Wishlist");
 const propertiesCollection = db.collection("Properties");
 
-// Auth related API
 app.post("/jwt", (req, res) => {
   const user = req.body;
   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -139,7 +138,6 @@ app.get("/users", async (req, res) => {
   const result = await usersCollection.find().toArray();
   res.send(result);
 });
-// Example endpoint to update user status
 app.put("/user/:email", async (req, res) => {
   const { email } = req.params;
   const { status } = req.body;
@@ -210,7 +208,6 @@ app.get("/wishlist", async (req, res) => {
   }
 });
 
-// Agent API
 app.post("/api/properties", async (req, res) => {
   const { title, location, imageUrl, agentName, agentEmail, priceRange } =
     req.body;
@@ -294,12 +291,10 @@ app.put("/api/properties/:id", async (req, res) => {
   }
 });
 
-// Default route
 app.get("/", (req, res) => {
   res.send("PropertyPros");
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`PropertyPros is sitting on port ${port}`);
 });
