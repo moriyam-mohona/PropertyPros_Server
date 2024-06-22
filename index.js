@@ -62,7 +62,7 @@ const featuredCollection = db.collection("Advertisement");
 const usersCollection = db.collection("Users");
 const wishlistCollection = db.collection("Wishlist");
 const propertiesCollection = db.collection("Properties");
-
+const offersCollection = db.collection("offers");
 app.post("/jwt", (req, res) => {
   const user = req.body;
   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -125,12 +125,33 @@ app.put("/user", async (req, res) => {
 });
 app.patch("/user/:email", async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, role } = req.body;
     const { email } = req.params;
-    const user = await usersCollection.findOneAndUpdate({ email }, { status });
-    res.send(user);
+
+    // Check if user exists
+    const user = await usersCollection.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update user
+    const result = await usersCollection.updateOne(
+      { email },
+      { $set: { status, role } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (result.modifiedCount === 0) {
+      return res.status(500).json({ message: "Failed to update user" });
+    }
+
+    res.status(200).json({ message: "User updated successfully" });
   } catch (error) {
-    res.status(500);
+    console.error(error);
+    res.status(500).json({ message: "An error occurred", error });
   }
 });
 
@@ -140,12 +161,12 @@ app.get("/users", async (req, res) => {
 });
 app.put("/user/:email", async (req, res) => {
   const { email } = req.params;
-  const { status } = req.body;
+  const { status, name } = req.body;
 
   try {
     const result = await usersCollection.updateOne(
       { email: email },
-      { $set: { status: status } }
+      { $set: { status: status, name: name } }
     );
 
     if (result.matchedCount > 0) {
@@ -290,7 +311,30 @@ app.put("/api/properties/:id", async (req, res) => {
     res.status(500).send({ message: "Error updating property", error });
   }
 });
-
+app.post("/offers", async (req, res) => {
+  const {
+    propertyId,
+    buyerEmail,
+    buyerName,
+    offeredAmount,
+    buyingDate,
+    status,
+  } = req.body;
+  try {
+    const newOffer = {
+      propertyId: new ObjectId(propertyId),
+      buyerEmail,
+      buyerName,
+      offeredAmount,
+      buyingDate,
+      status,
+    };
+    const result = await offersCollection.insertOne(newOffer);
+    res.status(201).json(result.ops[0]);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create offer", error });
+  }
+});
 app.get("/", (req, res) => {
   res.send("PropertyPros");
 });
