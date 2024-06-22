@@ -23,7 +23,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-// Verify JWT token middleware
 const verifyToken = (req, res, next) => {
   const token = req.cookies?.token;
   if (!token) {
@@ -38,7 +37,6 @@ const verifyToken = (req, res, next) => {
   });
 };
 
-// MongoDB client setup
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.z3gfp8c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -48,7 +46,6 @@ const client = new MongoClient(uri, {
   },
 });
 
-// Connect to MongoDB once and reuse the connection
 async function connectToDB() {
   try {
     await client.connect();
