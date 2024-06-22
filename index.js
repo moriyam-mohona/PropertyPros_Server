@@ -107,7 +107,7 @@ app.put("/user", async (req, res) => {
   const query = { email: user?.email };
   const isExist = await usersCollection.findOne(query);
   if (isExist) {
-    if (user.status === "Requested") {
+    if (user.status === "None") {
       const result = await usersCollection.updateOne(query, {
         $set: { status: user?.status },
       });
@@ -127,10 +127,10 @@ app.put("/user", async (req, res) => {
   const result = await usersCollection.updateOne(query, updateDoc, options);
   res.send(result);
 });
-app.patch("/user", verifyToken, async (req, res) => {
+app.patch("/user/:email", async (req, res) => {
   try {
     const { status } = req.body;
-    const email = req.user;
+    const { email } = req.params;
     const user = await usersCollection.findOneAndUpdate({ email }, { status });
     res.send(user);
   } catch (error) {
@@ -141,6 +141,27 @@ app.patch("/user", verifyToken, async (req, res) => {
 app.get("/users", async (req, res) => {
   const result = await usersCollection.find().toArray();
   res.send(result);
+});
+// Example endpoint to update user status
+app.put("/user/:email", async (req, res) => {
+  const { email } = req.params;
+  const { status } = req.body;
+
+  try {
+    const result = await usersCollection.updateOne(
+      { email: email },
+      { $set: { status: status } }
+    );
+
+    if (result.matchedCount > 0) {
+      res.status(200).send({ message: "User status updated successfully" });
+    } else {
+      res.status(404).send({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error("Error updating user status:", error);
+    res.status(500).send({ message: "Error updating user status", error });
+  }
 });
 
 app.get("/Advertisement", async (req, res) => {
