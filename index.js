@@ -63,6 +63,7 @@ const usersCollection = db.collection("Users");
 const wishlistCollection = db.collection("Wishlist");
 const propertiesCollection = db.collection("Properties");
 const offersCollection = db.collection("offers");
+
 app.post("/jwt", (req, res) => {
   const user = req.body;
   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -228,6 +229,21 @@ app.get("/wishlist", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch wishlist items", error });
   }
 });
+app.get("/wishlist/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const wishlistItem = await wishlistCollection.findOne({
+      _id: new ObjectId(id),
+    });
+    if (!wishlistItem) {
+      return res.status(404).json({ message: "Wishlist item not found" });
+    }
+    res.status(200).json(wishlistItem);
+  } catch (error) {
+    console.error("Error fetching wishlist item by ID:", error);
+    res.status(500).json({ message: "Failed to fetch wishlist item", error });
+  }
+});
 
 app.post("/api/properties", async (req, res) => {
   const { title, location, imageUrl, agentName, agentEmail, priceRange } =
@@ -313,7 +329,9 @@ app.put("/api/properties/:id", async (req, res) => {
 });
 app.post("/offers", async (req, res) => {
   const {
-    propertyId,
+    title,
+    location,
+    agentEmail,
     buyerEmail,
     buyerName,
     offeredAmount,
@@ -322,7 +340,9 @@ app.post("/offers", async (req, res) => {
   } = req.body;
   try {
     const newOffer = {
-      propertyId: new ObjectId(propertyId),
+      title,
+      location,
+      agentEmail,
       buyerEmail,
       buyerName,
       offeredAmount,
@@ -330,11 +350,74 @@ app.post("/offers", async (req, res) => {
       status,
     };
     const result = await offersCollection.insertOne(newOffer);
-    res.status(201).json(result.ops[0]);
+    res.status(201).json({ ...newOffer, _id: result.insertedId });
   } catch (error) {
     res.status(500).json({ message: "Failed to create offer", error });
   }
 });
+// Add this new route to your existing code
+
+app.get("/offers", async (req, res) => {
+  const { agentEmail } = req.query;
+
+  try {
+    if (!agentEmail) {
+      return res.status(400).json({ message: "Agent email is required" });
+    }
+
+    const offers = await offersCollection.find({ agentEmail }).toArray();
+    res.status(200).json(offers);
+  } catch (error) {
+    console.error("Error fetching offers by agent email:", error);
+    res.status(500).json({ message: "Failed to fetch offers", error });
+  }
+});
+app.patch("/offers/:id", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ message: "Status is required" });
+  }
+
+  try {
+    const result = await offersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Offer not found" });
+    }
+
+    if (result.modifiedCount === 0) {
+      return res.status(500).json({ message: "Failed to update offer status" });
+    }
+
+    res.status(200).json({ message: "Offer status updated successfully" });
+  } catch (error) {
+    console.error("Error updating offer status:", error);
+    res.status(500).json({ message: "Failed to update offer status", error });
+  }
+});
+
+// New route to get offers by buyer email
+app.get("/offers/buyer", async (req, res) => {
+  const { buyerEmail } = req.query;
+
+  try {
+    if (!buyerEmail) {
+      return res.status(400).json({ message: "Buyer email is required" });
+    }
+
+    const offers = await offersCollection.find({ buyerEmail }).toArray();
+    res.status(200).json(offers);
+  } catch (error) {
+    console.error("Error fetching offers by buyer email:", error);
+    res.status(500).json({ message: "Failed to fetch offers", error });
+  }
+});
+
 app.get("/", (req, res) => {
   res.send("PropertyPros");
 });
