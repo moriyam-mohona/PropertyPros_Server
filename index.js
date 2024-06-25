@@ -148,6 +148,14 @@ app.patch("/user/:email", async (req, res) => {
     if (result.modifiedCount === 0) {
       return res.status(500).json({ message: "Failed to update user" });
     }
+    if (role === "fraud") {
+      const deleteResult = await propertiesCollection.deleteMany({
+        agentEmail: email,
+      });
+      console.log(
+        `Deleted ${deleteResult.deletedCount} properties listed by user ${email}`
+      );
+    }
 
     res.status(200).json({ message: "User updated successfully" });
   } catch (error) {
@@ -178,6 +186,22 @@ app.put("/user/:email", async (req, res) => {
   } catch (error) {
     console.error("Error updating user status:", error);
     res.status(500).send({ message: "Error updating user status", error });
+  }
+});
+app.delete("/user/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Failed to delete user", error });
   }
 });
 
@@ -330,6 +354,7 @@ app.put("/api/properties/:id", async (req, res) => {
 app.post("/offers", async (req, res) => {
   const {
     title,
+    imageUrl,
     location,
     agentEmail,
     buyerEmail,
