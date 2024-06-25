@@ -245,7 +245,7 @@ app.delete("/wishlist/:id", async (req, res) => {
 });
 
 app.get("/wishlist", async (req, res) => {
-  const user = req.query.user;
+  const email = req.query.email;
   try {
     const result = await wishlistCollection.find({ user }).toArray();
     res.status(200).json(result);
