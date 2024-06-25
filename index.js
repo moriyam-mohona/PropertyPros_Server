@@ -451,6 +451,8 @@ app.post("/reviews", async (req, res) => {
     propertyId,
     propertyTitle,
     agentName,
+    reviewerName,
+    reviewerImg,
     reviewTime,
     reviewDescription,
     userEmail,
@@ -460,6 +462,8 @@ app.post("/reviews", async (req, res) => {
     propertyId: new ObjectId(propertyId),
     propertyTitle,
     agentName,
+    reviewerName,
+    reviewerImg,
     reviewTime: new Date(reviewTime),
     reviewDescription,
     userEmail,
@@ -473,8 +477,18 @@ app.post("/reviews", async (req, res) => {
     res.status(500).send({ message: "Error saving review", error });
   }
 });
+// GET all reviews
+app.get("/reviews", async (req, res) => {
+  try {
+    const reviews = await reviewsCollection.find().toArray();
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error("Error fetching all reviews:", error);
+    res.status(500).json({ message: "Failed to fetch reviews", error });
+  }
+});
 
-// 2. Get Reviews by Property ID
+// Get Reviews by Property ID
 app.get("/reviews/property/:propertyId", async (req, res) => {
   const { propertyId } = req.params;
 
@@ -490,7 +504,7 @@ app.get("/reviews/property/:propertyId", async (req, res) => {
   }
 });
 
-// 3. Get Review by Review ID
+//  Get Review by Review ID
 app.get("/reviews/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -505,7 +519,7 @@ app.get("/reviews/:id", async (req, res) => {
   }
 });
 
-// 4. Get Reviews by User Email
+//  Get Reviews by User Email
 app.get("/reviews/user/:email", async (req, res) => {
   const { email } = req.params;
 
@@ -518,6 +532,24 @@ app.get("/reviews/user/:email", async (req, res) => {
     res
       .status(500)
       .send({ message: "Error fetching reviews by user email", error });
+  }
+});
+
+// DELETE review by ID
+app.delete("/reviews/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await reviewsCollection.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    res.status(200).json({ message: "Review deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    res.status(500).json({ message: "Failed to delete review", error });
   }
 });
 
