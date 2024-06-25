@@ -130,13 +130,11 @@ app.patch("/user/:email", async (req, res) => {
     const { status, role } = req.body;
     const { email } = req.params;
 
-    // Check if user exists
     const user = await usersCollection.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update user
     const result = await usersCollection.updateOne(
       { email },
       { $set: { status, role } }
@@ -381,7 +379,6 @@ app.post("/offers", async (req, res) => {
     res.status(500).json({ message: "Failed to create offer", error });
   }
 });
-// Add this new route to your existing code
 
 app.get("/offers", async (req, res) => {
   const { agentEmail } = req.query;
@@ -427,7 +424,6 @@ app.patch("/offers/:id", async (req, res) => {
   }
 });
 
-// New route to get offers by buyer email
 app.get("/offers/buyer", async (req, res) => {
   const { buyerEmail } = req.query;
 
@@ -443,9 +439,7 @@ app.get("/offers/buyer", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch offers", error });
   }
 });
-// Adding the reviews collection
 
-// 1. Create a Review
 app.post("/reviews", async (req, res) => {
   const {
     propertyId,
@@ -477,7 +471,6 @@ app.post("/reviews", async (req, res) => {
     res.status(500).send({ message: "Error saving review", error });
   }
 });
-// GET all reviews
 app.get("/reviews", async (req, res) => {
   try {
     const reviews = await reviewsCollection.find().toArray();
@@ -488,7 +481,6 @@ app.get("/reviews", async (req, res) => {
   }
 });
 
-// Get Reviews by Property ID
 app.get("/reviews/property/:propertyId", async (req, res) => {
   const { propertyId } = req.params;
 
@@ -504,7 +496,6 @@ app.get("/reviews/property/:propertyId", async (req, res) => {
   }
 });
 
-//  Get Review by Review ID
 app.get("/reviews/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -519,7 +510,6 @@ app.get("/reviews/:id", async (req, res) => {
   }
 });
 
-//  Get Reviews by User Email
 app.get("/reviews/user/:email", async (req, res) => {
   const { email } = req.params;
 
@@ -535,7 +525,6 @@ app.get("/reviews/user/:email", async (req, res) => {
   }
 });
 
-// DELETE review by ID
 app.delete("/reviews/:id", async (req, res) => {
   const { id } = req.params;
 
