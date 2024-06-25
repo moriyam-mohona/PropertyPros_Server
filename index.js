@@ -63,6 +63,7 @@ const usersCollection = db.collection("Users");
 const wishlistCollection = db.collection("Wishlist");
 const propertiesCollection = db.collection("Properties");
 const offersCollection = db.collection("offers");
+const reviewsCollection = db.collection("Reviews");
 
 app.post("/jwt", (req, res) => {
   const user = req.body;
@@ -440,6 +441,83 @@ app.get("/offers/buyer", async (req, res) => {
   } catch (error) {
     console.error("Error fetching offers by buyer email:", error);
     res.status(500).json({ message: "Failed to fetch offers", error });
+  }
+});
+// Adding the reviews collection
+
+// 1. Create a Review
+app.post("/reviews", async (req, res) => {
+  const {
+    propertyId,
+    propertyTitle,
+    agentName,
+    reviewTime,
+    reviewDescription,
+    userEmail,
+  } = req.body;
+
+  const newReview = {
+    propertyId: new ObjectId(propertyId),
+    propertyTitle,
+    agentName,
+    reviewTime: new Date(reviewTime),
+    reviewDescription,
+    userEmail,
+    createdAt: new Date(),
+  };
+
+  try {
+    const result = await reviewsCollection.insertOne(newReview);
+    res.status(201).send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Error saving review", error });
+  }
+});
+
+// 2. Get Reviews by Property ID
+app.get("/reviews/property/:propertyId", async (req, res) => {
+  const { propertyId } = req.params;
+
+  try {
+    const reviews = await reviewsCollection
+      .find({ propertyId: new ObjectId(propertyId) })
+      .toArray();
+    res.status(200).send(reviews);
+  } catch (error) {
+    res
+      .status(500)
+      .send({ message: "Error fetching reviews by property ID", error });
+  }
+});
+
+// 3. Get Review by Review ID
+app.get("/reviews/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const review = await reviewsCollection.findOne({ _id: new ObjectId(id) });
+    if (!review) {
+      return res.status(404).send({ message: "Review not found" });
+    }
+    res.status(200).send(review);
+  } catch (error) {
+    res.status(500).send({ message: "Error fetching review by ID", error });
+  }
+});
+
+// 4. Get Reviews by User Email
+app.get("/reviews/user/:email", async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const reviews = await reviewsCollection
+      .find({ userEmail: email })
+      .toArray();
+    res.status(200).send(reviews);
+  } catch (error) {
+    res
+      .status(500)
+      .send({ message: "Error fetching reviews by user email", error });
   }
 });
 
