@@ -243,10 +243,10 @@ app.delete("/wishlist/:id", async (req, res) => {
   }
 });
 
-app.get("/wishlist", async (req, res) => {
-  const email = req.query.email;
+app.get("/wishlist/byEmail/:email", async (req, res) => {
+  const { email } = req.params;
   try {
-    const result = await wishlistCollection.find({ user }).toArray();
+    const result = await wishlistCollection.find({ email }).toArray();
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch wishlist items", error });
@@ -365,6 +365,7 @@ app.post("/offers", async (req, res) => {
   try {
     const newOffer = {
       title,
+      imageUrl,
       location,
       agentEmail,
       buyerEmail,
